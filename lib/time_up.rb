@@ -3,10 +3,11 @@ require_relative "time_up/version"
 module TimeUp
   class Error < StandardError; end
 
-  @timers = {}
+  Thread.current[:time_up_timers] = {}
+
   def self.start(name, &blk)
     raise Error.new("Timer name must be a String or Symbol") unless name.is_a?(Symbol) || name.is_a?(String)
-    timer = @timers[name] ||= Timer.new(name)
+    timer = __timers[name] ||= Timer.new(name)
     timer.start
     if blk
       blk.call
@@ -17,42 +18,42 @@ module TimeUp
 
   # Delegate methods
   def self.timer(name)
-    @timers[name]
+    __timers[name]
   end
 
   def self.stop(name)
     __ensure_timer(name)
-    @timers[name].stop
+    __timers[name].stop
   end
 
   def self.elapsed(name)
     __ensure_timer(name)
-    @timers[name].elapsed
+    __timers[name].elapsed
   end
 
   def self.reset(name)
     __ensure_timer(name)
-    @timers[name].reset
+    __timers[name].reset
   end
 
   # Interrogative methods
   def self.total_elapsed
-    @timers.values.sum(&:elapsed)
+    __timers.values.sum(&:elapsed)
   end
 
   def self.all_elapsed
-    @timers.values.map { |timer|
+    __timers.values.map { |timer|
       [timer.name, timer.elapsed]
     }.to_h
   end
 
   def self.active_timers
-    @timers.values.select(&:active?)
+    __timers.values.select(&:active?)
   end
 
   def self.print_summary(io = $stdout)
-    longest_name_length = @timers.values.map { |t| t.name.inspect.size }.max
-    summaries = @timers.values.map { |timer|
+    longest_name_length = __timers.values.map { |t| t.name.inspect.size }.max
+    summaries = __timers.values.map { |timer|
       name = "#{timer.name.inspect}#{"*" if timer.active?}".ljust(longest_name_length + 1)
       "#{name}\t#{"%.5f" % timer.elapsed}s"
     }
@@ -62,27 +63,31 @@ module TimeUp
       ========================
       #{summaries.join("\n")}
 
-      #{"* Denotes that the timer is still active\n" if @timers.values.any?(&:active?)}
+      #{"* Denotes that the timer is still active\n" if __timers.values.any?(&:active?)}
     SUMMARY
   end
 
   # Iterative methods
   def self.stop_all
-    @timers.values.each(&:stop)
+    __timers.values.each(&:stop)
   end
 
   def self.reset_all
-    @timers.values.each(&:reset)
+    __timers.values.each(&:reset)
   end
 
   def self.delete_all
-    @timers.values.each { |t| t.reset(force: true) }
-    @timers = {}
+    __timers.values.each { |t| t.reset(force: true) }
+    Thread.current[:time_up_timers] = {}
   end
 
   # Internal methods
+  def self.__timers
+    Thread.current[:time_up_timers]
+  end
+
   def self.__ensure_timer(name)
-    raise Error.new("No timer named #{name.inspect}") unless @timers[name]
+    raise Error.new("No timer named #{name.inspect}") unless __timers[name]
   end
 
   class Timer
