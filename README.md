@@ -6,10 +6,10 @@ but don't necessarily want to reach for
 Try `time_up`!
 
 This gem is especially useful for long-running processes (like test suites) that
-have several time-intensive operations that are repeated over time and that you
-want to measure and aggregate. (For example, to see how much time your
-test suite spends creating factories, truncating the database, or invoking a
-critical code path.)
+have several time-intensive operations that are repeated over the life of the
+process and that you want to measure in aggregate. (For example, to see how
+much time your test suite spends creating factories, truncating the database, or
+invoking a critical code path.)
 
 ## Install
 
