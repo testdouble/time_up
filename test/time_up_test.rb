@@ -10,11 +10,13 @@ class TimeUpTest < Minitest::Test
   end
 
   def test_counts_block_time
-    timer = TimeUp.start :alpha do
+    result = TimeUp.start :alpha do
       sleep 0.1
+      :some_result
     end
     assert_in_delta 0.1, TimeUp.elapsed(:alpha), 0.02
-    assert_equal TimeUp.elapsed(:alpha), timer.elapsed
+    assert_equal TimeUp.elapsed(:alpha), TimeUp.timer(:alpha).elapsed
+    assert_equal :some_result, result
   end
 
   def test_counts_without_block
@@ -75,8 +77,12 @@ class TimeUpTest < Minitest::Test
     TimeUp.reset(:b)
     sleep 0.1
 
+    assert_equal 0, a.count
+    assert_equal [], a.timings
     assert_equal 0.0, TimeUp.elapsed(:a)
     assert_equal TimeUp.elapsed(:a), a.elapsed
+    assert_equal 1, b.count
+    assert_in_delta 0.1, TimeUp.timings(:b)[0], 0.02
     assert_in_delta 0.1, TimeUp.elapsed(:b), 0.02
     assert_in_delta TimeUp.elapsed(:b), b.elapsed, 0.01
   end
@@ -100,6 +106,9 @@ class TimeUpTest < Minitest::Test
 
     e = assert_raises(TimeUp::Error) { TimeUp.reset(:kek) }
     assert_equal "No timer named :kek", e.message
+
+    e = assert_raises(TimeUp::Error) { TimeUp.timings(:hrm) }
+    assert_equal "No timer named :hrm", e.message
   end
 
   def test_raises_if_name_isnt_a_string_or_symbol
@@ -159,11 +168,10 @@ class TimeUpTest < Minitest::Test
 
   def test_delete_all
     t = TimeUp.start(:t)
-    sleep 0.1
 
     TimeUp.delete_all
 
-    assert_nil TimeUp.timer(:t)
+    refute_same t, TimeUp.timer(:t)
     assert_equal 0.0, t.elapsed
     refute t.active?
   end
@@ -224,5 +232,85 @@ class TimeUpTest < Minitest::Test
     assert_match(/:souffle\*	0\.00\d{3}s/, lines[6])
     assert_equal "", lines[7]
     assert_equal "* Denotes that the timer is still active", lines[8]
+  end
+
+  def test_timings
+    TimeUp.start(:z) { sleep 0.1 }
+
+    assert_equal 1, TimeUp.timings(:z).size
+    assert_in_delta 0.1, TimeUp.timings(:z)[0], 0.01
+    assert_equal TimeUp.timer(:z).timings, TimeUp.timings(:z)
+
+    TimeUp.start(:z)
+    sleep 0.05
+
+    ongoing_timings = TimeUp.timings(:z)
+    assert_equal 2, ongoing_timings.size
+    assert_in_delta 0.1, ongoing_timings[0], 0.01
+    assert_in_delta 0.05, ongoing_timings[1], 0.01
+  end
+
+  def test_empty_stats
+    timer = TimeUp.timer(:a)
+
+    assert_equal 0, timer.elapsed
+    assert_equal TimeUp.elapsed(:a), timer.elapsed
+    assert_equal 0, timer.count
+    assert_equal TimeUp.count(:a), timer.count
+    assert_equal 0, timer.timings.size
+    assert_equal TimeUp.timings(:a).size, timer.timings.size
+    assert_nil timer.min
+    assert_nil TimeUp.min(:a)
+    assert_nil timer.max
+    assert_nil TimeUp.max(:a)
+    assert_nil timer.mean
+    assert_nil TimeUp.mean(:a)
+  end
+
+  def test_basic_stats_tracking
+    timer = TimeUp.timer(:a)
+    timer.start { sleep 0.1 }
+    timer.start { sleep 0.2 }
+    sleep 0.1
+    timer.start { sleep 0.1 }
+    timer.start { sleep 0.05 }
+
+    assert_in_delta 0.45, timer.elapsed, 0.03
+    assert_equal 4, timer.count
+    assert_equal 4, timer.timings.size
+    assert_in_delta 0.1, timer.timings[0], 0.01
+    assert_in_delta 0.2, timer.timings[1], 0.01
+    assert_in_delta 0.1, timer.timings[2], 0.01
+    assert_in_delta 0.05, timer.timings[3], 0.01
+    assert_in_delta 0.05, timer.min, 0.01
+    assert_in_delta 0.2, timer.max, 0.01
+    assert_in_delta 0.1125, timer.mean, 0.03
+  end
+
+  def test_all_stats
+    TimeUp.start(:a) { sleep 0.05 }
+    TimeUp.start(:b) { sleep 0.05 }
+    TimeUp.start(:a) { sleep 0.1 }
+
+    result = TimeUp.all_stats
+
+    a = TimeUp.timer(:a)
+    b = TimeUp.timer(:b)
+    assert_equal({
+      a: {
+        elapsed: a.elapsed,
+        count: 2,
+        min: a.min,
+        max: a.max,
+        mean: a.mean
+      },
+      b: {
+        elapsed: b.elapsed,
+        count: 1,
+        min: b.min,
+        max: b.max,
+        mean: b.mean
+      }
+    }, result)
   end
 end

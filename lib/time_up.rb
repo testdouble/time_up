@@ -5,35 +5,29 @@ module TimeUp
 
   Thread.current[:time_up_timers] = {}
 
-  def self.start(name, &blk)
-    raise Error.new("Timer name must be a String or Symbol") unless name.is_a?(Symbol) || name.is_a?(String)
-    timer = __timers[name] ||= Timer.new(name)
-    timer.start
-    if blk
-      blk.call
-      timer.stop
-    end
-    timer
+  def self.timer(name)
+    __timers[name] ||= Timer.new(name)
   end
 
   # Delegate methods
-  def self.timer(name)
-    __timers[name]
+  def self.start(name, &blk)
+    timer(name).start(&blk)
   end
 
-  def self.stop(name)
-    __ensure_timer(name)
-    __timers[name].stop
-  end
-
-  def self.elapsed(name)
-    __ensure_timer(name)
-    __timers[name].elapsed
-  end
-
-  def self.reset(name)
-    __ensure_timer(name)
-    __timers[name].reset
+  [
+    :stop,
+    :reset,
+    :elapsed,
+    :timings,
+    :count,
+    :min,
+    :max,
+    :mean
+  ].each do |method_name|
+    define_singleton_method method_name do |name|
+      __ensure_timer(name)
+      __timers[name].send(method_name)
+    end
   end
 
   # Interrogative methods
@@ -44,6 +38,18 @@ module TimeUp
   def self.all_elapsed
     __timers.values.map { |timer|
       [timer.name, timer.elapsed]
+    }.to_h
+  end
+
+  def self.all_stats
+    __timers.values.map { |timer|
+      [timer.name, {
+        elapsed: timer.elapsed,
+        count: timer.count,
+        min: timer.min,
+        max: timer.max,
+        mean: timer.mean
+      }]
     }.to_h
   end
 
@@ -94,33 +100,41 @@ module TimeUp
     attr_reader :name
 
     def initialize(name)
+      validate!(name)
       @name = name
       @start_time = nil
-      @elapsed = 0.0
+      @total_elapsed = 0.0
+      @past_timings = []
     end
 
-    def start
+    def start(&blk)
       @start_time ||= now
+      if blk
+        blk.call.tap do
+          stop
+        end
+      else
+        self
+      end
     end
 
     def stop
       if @start_time
-        @elapsed += now - @start_time
+        duration = now - @start_time
+        @past_timings.push(duration)
+        @total_elapsed += duration
+
         @start_time = nil
       end
-      @elapsed
+      @total_elapsed
     end
 
     def elapsed
       if active?
-        @elapsed + (now - @start_time)
+        @total_elapsed + (now - @start_time)
       else
-        @elapsed
+        @total_elapsed
       end
-    end
-
-    def active?
-      !!@start_time
     end
 
     def reset(force: false)
@@ -129,10 +143,47 @@ module TimeUp
       elsif !@start_time.nil?
         @start_time = now
       end
-      @elapsed = 0.0
+      @total_elapsed = 0.0
+      @past_timings = []
+    end
+
+    def count
+      timings.size
+    end
+
+    def min
+      timings.min
+    end
+
+    def max
+      timings.max
+    end
+
+    def mean
+      times = timings
+      return if times.empty?
+      times.sum / times.size
+    end
+
+    def timings
+      if active?
+        @past_timings + [now - @start_time]
+      else
+        @past_timings
+      end
+    end
+
+    def active?
+      !!@start_time
     end
 
     private
+
+    def validate!(name)
+      unless name.is_a?(Symbol) || name.is_a?(String)
+        raise Error.new("Timer name must be a String or Symbol")
+      end
+    end
 
     def now
       Process.clock_gettime(Process::CLOCK_MONOTONIC)

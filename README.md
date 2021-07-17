@@ -65,10 +65,10 @@ sleep 5
 puts TimeUp.stop :eggs # => ~5.0
 ```
 
-`TimeUp.start` also returns an instance of the named timer, which has its own
-`start`, `stop`, `elaped`, and `reset` methods. If you want to find that
-instance later, you can also call `TimeUp.timer(:some_name)`. So the above
-example could be rewritten as:
+When passes without a block, `TimeUp.start` returns an instance of the timer,
+which has its own `start`, `stop`, `elaped`, and `reset` methods. If you want to
+find that instance later, you can also call `TimeUp.timer(:some_name)`. So the
+above example could be rewritten as:
 
 ```ruby
 egg_timer = TimeUp.start :eggs
@@ -124,18 +124,35 @@ straightforward, so I'd encourage you to [read the code](/lib/time_up.rb).
 
 ### `TimeUp` module
 
-`TimeUp.start(name, [&blk])` - Starts (or restarts) and returns a named `Timer`
+`TimeUp.timer(name)` - Returns the `Timer` instance named `name` (creating it,
+if it doesn't exist)
 
-`TimeUp.timer(name)` - Returns any a `Timer` instance named `name` or `nil`
+`TimeUp.start(name, [&blk])` - Starts (or restarts) a named
+[Timer](#timeuptimer-class). If passed with a block, will return whatever the
+block evaluates to. If passed without a block, it will return the timer object
 
 `TimeUp.stop(name)` - Stops the named timer or raises if it's not defined
+
+`TimeUp.reset(name)` - Resets the named timer's elapsed time to 0, effectively
+restarting it if it's currently running. Raises if the timer isn't defined.
 
 `TimeUp.elapsed(name)` - Returns a `Float` of the total elapsed seconds that the
 named timer has been running (and raises if no timer is defined with the given
 `name`)
 
-`TimeUp.reset(name)` - Resets the named timer's elapsed time to 0, effectively
-restarting it if it's currently running. Raises if the timer isn't defined.
+`TimeUp.timings(name)` - Returns an array of each recorded start-to-stop
+duration of the timer (including the current one, if active)
+
+`TimeUp.count(name)` - The number of times the timer has been started and
+stopped (including the current timing, if active)
+
+`TimeUp.min(name)` - The shortest recording of the timer (including the current
+one, if active)
+
+`TimeUp.max(name)` - The longest recording of the timer (including the current
+one, if active)
+
+`TimeUp.mean(name)` - The arithmetic mean of all recorded durations of the timer
 
 `TimeUp.total_elapsed` - Returns a `Float` of the sum of `elapsed` for all the
 timers you've created
@@ -144,12 +161,17 @@ timers you've created
 `elapsed` values. Handy for grabbing a snapshot of the state of things at a
 particular point in time without stopping all your timers
 
+`TimeUp.all_stats` - Returns a hash of timer name keys mapped to another
+hash of their basic statistics (elapsed time, number of recordings, min, max,
+and mean)
+
 `TimeUp.active_timers` - Returns an array of all timers that are currently
 running. Useful for detecting cases where you might be counting the same time in
 multiple places simultaneously
 
-`TimeUp.print_summary([IO])` - Pretty-prints a multi-line summary of all your
-timers to STDOUT (or the provided IO)
+`TimeUp.print_summary([io])` - Pretty-prints a multi-line summary of all your
+timers to standard output (or the provided
+[IO](https://ruby-doc.org/core-3.0.1/IO.html))
 
 `TimeUp.stop_all` - Stops all timers
 
@@ -165,6 +187,20 @@ reference to them
 `stop` - Stops the timer
 
 `elapsed` - A `Float` of the total elapsed seconds the timer has been running
+
+`timings` - Returns an array of each recorded start-to-stop duration of the
+timer (including the current one, if active)
+
+`count` - The number of times the timer has been started and stopped (including
+the current timing, if active)
+
+`min` - The shortest recording of the timer (including the current one, if
+active)
+
+`max` - The longest recording of the timer (including the current one, if
+active)
+
+`mean` - The arithmetic mean of all recorded durations of the timer
 
 `active?` - Returns `true` if the timer is running
 
