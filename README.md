@@ -107,7 +107,7 @@ TimeUp.print_summary
 Which will output something like:
 
 ```
-TimeUp timers summary
+TimeUp summary
 ========================
 :roast   	0.07267s
 :veggies 	0.03760s
@@ -117,10 +117,26 @@ TimeUp timers summary
 * Denotes that the timer is still active
 ```
 
+And if you're calling the timers multiple times and want to see some basic
+statistics in the print-out, you can call `TimeUp.print_detailed_summary`, which
+will produce this:
+
+```
+=========================================================
+  Name    | Elapsed | Count |   Min   |   Max   |  Mean
+---------------------------------------------------------
+:roast    | 0.08641 | 3     | 0.00127 | 0.07261 | 0.02880
+:veggies  | 0.03759 | 1     | 0.03759 | 0.03759 | 0.03759
+:pasta    | 0.01256 | 11    | 0.00000 | 0.01255 | 0.00114
+:souffle* | 0.00006 | 1     | 0.00007 | 0.00007 | 0.00007
+
+* Denotes that the timer is still active
+```
+
 ## API
 
 This gem defines a bunch of public methods but they're all pretty short and
-straightforward, so when in doubt, I'd encourage you to [read the 
+straightforward, so when in doubt, I'd encourage you to [read the
 code](/lib/time_up.rb).
 
 ### `TimeUp` module
@@ -170,8 +186,12 @@ running. Useful for detecting cases where you might be keeping time in multiple
 places simultaneously
 
 `TimeUp.print_summary([io])` - Pretty-prints a multi-line summary of all your
-timers to standard output (or the provided
+timers' total elapsed times to standard output (or the provided
 [IO](https://ruby-doc.org/core-3.0.1/IO.html))
+
+`TimeUp.print_detailed_summary([io])` - Pretty-prints a multi-line summary of
+all your timers' elapsed times and basic statistics to standard output (or the
+provided [IO](https://ruby-doc.org/core-3.0.1/IO.html))
 
 `TimeUp.stop_all` - Stops all timers
 

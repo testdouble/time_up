@@ -224,7 +224,7 @@ class TimeUpTest < Minitest::Test
     lines = string_io.tap(&:rewind).read.split("\n")
 
     assert_equal "", lines[0]
-    assert_equal "TimeUp timers summary", lines[1]
+    assert_equal "TimeUp summary", lines[1]
     assert_equal "========================", lines[2]
     assert_match(/:roast   	0\.0[567]\d{3}s/, lines[3])
     assert_match(/:veggies 	0\.0[234]\d{3}s/, lines[4])
@@ -232,6 +232,40 @@ class TimeUpTest < Minitest::Test
     assert_match(/:souffle\*	0\.00\d{3}s/, lines[6])
     assert_equal "", lines[7]
     assert_equal "* Denotes that the timer is still active", lines[8]
+  end
+
+  def test_print_detailed_summary
+    TimeUp.start :roast
+    sleep 0.03
+    TimeUp.start :veggies
+    sleep 0.02
+    TimeUp.start :pasta
+    sleep 0.01
+    TimeUp.stop_all
+    TimeUp.start(:roast) { sleep 0.01 }
+    TimeUp.start(:roast) { sleep 0.001 }
+    10.times { TimeUp.start(:pasta) {} }
+    TimeUp.start :souffle
+
+    string_io = StringIO.new
+    TimeUp.print_detailed_summary(string_io)
+
+    lines = string_io.tap(&:rewind).read.split("\n")
+
+    [
+      "",
+      "=========================================================",
+      "  Name    | Elapsed | Count |   Min   |   Max   |  Mean  ",
+      "---------------------------------------------------------",
+      /^:roast    \| 0.0[789]\d{3} \| 3     \| 0.00\d{3} \| 0.0[678]\d{3} \| 0.0[123]\d{3}/,
+      /^:veggies  \| 0.0[234]\d{3} \| 1     \| 0.0[234]\d{3} \| 0.0[234]\d{3} \| 0.0[234]\d{3}/,
+      /^:pasta    \| 0.0[012]\d{3} \| 11    \| 0.00000 \| 0.0[012]\d{3} \| 0.00\d{3}/,
+      /^:souffle\* \| 0.00\d{3} \| 1     \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3}/,
+      "",
+      "* Denotes that the timer is still active"
+    ].each.with_index do |expected, i|
+      assert_match expected, lines[i]
+    end
   end
 
   def test_timings

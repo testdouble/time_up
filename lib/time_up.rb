@@ -65,9 +65,55 @@ module TimeUp
     }
     io.puts <<~SUMMARY
 
-      TimeUp timers summary
+      TimeUp summary
       ========================
       #{summaries.join("\n")}
+
+      #{"* Denotes that the timer is still active\n" if __timers.values.any?(&:active?)}
+    SUMMARY
+  end
+
+  def self.print_detailed_summary(io = $stdout)
+    cols = {
+      names: ["Name"],
+      elapsed: ["Elapsed"],
+      count: ["Count"],
+      min: ["Min"],
+      max: ["Max"],
+      mean: ["Mean"]
+    }
+    __timers.values.each { |timer|
+      cols[:names] << "#{timer.name.inspect}#{"*" if timer.active?}"
+      cols[:elapsed] << "%.5f" % timer.elapsed
+      cols[:count] << timer.count.to_s
+      cols[:min] << "%.5f" % timer.min
+      cols[:max] << "%.5f" % timer.max
+      cols[:mean] << "%.5f" % timer.mean
+    }
+
+    widths = cols.map { |name, vals|
+      [name, vals.map(&:length).max]
+    }.to_h
+
+    rows = cols[:names].size.times.map { |i|
+      if i == 0
+        cols.keys.map { |name|
+          cols[name][i].center(widths[name])
+        }
+      else
+        cols.keys.map { |name|
+          cols[name][i].ljust(widths[name])
+        }
+      end
+    }
+
+    full_width = widths.values.sum + (rows[0].size - 1) * 3
+    io.puts <<~SUMMARY
+
+      #{"=" * full_width}
+      #{rows[0].join(" | ")}
+      #{"-" * full_width}
+      #{rows[1..-1].map { |row| row.join(" | ") }.join("\n")}
 
       #{"* Denotes that the timer is still active\n" if __timers.values.any?(&:active?)}
     SUMMARY
