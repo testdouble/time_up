@@ -129,46 +129,45 @@ code](/lib/time_up.rb).
 if it doesn't exist)
 
 `TimeUp.start(name, [&blk])` - Starts (or restarts) a named
-[Timer](#timeuptimer-class). If passed with a block, will return whatever the
-block evaluates to. If passed without a block, it will return the timer object
+[Timer](#timeuptimer-class). If passed a block, will return whatever the block
+evaluates to. If called without a block, it will return the timer object
 
-`TimeUp.stop(name)` - Stops the named timer or raises if it's not defined
+`TimeUp.stop(name)` - Stops the named timer
 
 `TimeUp.reset(name)` - Resets the named timer's elapsed time to 0, effectively
-restarting it if it's currently running. Raises if the timer isn't defined.
+restarting it if it's currently running
 
 `TimeUp.elapsed(name)` - Returns a `Float` of the total elapsed seconds that the
-named timer has been running (and raises if no timer is defined with the given
-`name`)
+named timer has been running
 
 `TimeUp.timings(name)` - Returns an array of each recorded start-to-stop
-duration of the timer (including the current one, if active)
+duration (including the current one, if the timer is running) of the named timer
 
-`TimeUp.count(name)` - The number of times the timer has been started and
-stopped (including the current timing, if active)
+`TimeUp.count(name)` - The number of times the timer has been started (including
+the current timing, if the timer is running)
 
-`TimeUp.min(name)` - The shortest recording of the timer (including the current
-one, if active)
+`TimeUp.min(name)` - The shortest recording by the timer
 
-`TimeUp.max(name)` - The longest recording of the timer (including the current
-one, if active)
+`TimeUp.max(name)` - The longest recording by the timer
 
-`TimeUp.mean(name)` - The arithmetic mean of all recorded durations of the timer
+`TimeUp.mean(name)` - The arithmetic mean of all recordings by the timer
 
-`TimeUp.total_elapsed` - Returns a `Float` of the sum of `elapsed` for all the
-timers you've created
+`TimeUp.total_elapsed` - Returns a `Float` of the sum of `elapsed` across all
+the timers you've created (note that because you can easily run multiple logical
+timers simultaneously, this figure may exceed the total time spent by the
+computer)
 
-`TimeUp.all_elapsed` - Returns a hash of timer name keys mapped to their
-`elapsed` values. Handy for grabbing a snapshot of the state of things at a
-particular point in time without stopping all your timers
+`TimeUp.all_elapsed` - Returns a Hash of timer name keys mapped to their
+`elapsed` values. Handy for grabbing a reference to a snapshot of the state of
+things without requiring you to stop your timers
 
-`TimeUp.all_stats` - Returns a hash of timer name keys mapped to another
-hash of their basic statistics (elapsed time, number of recordings, min, max,
-and mean)
+`TimeUp.all_stats` - Returns a Hash of timer name keys mapped to another
+hash of their basic statistics (`elapsed`, `count`, `min`, `max`,
+and `mean`)
 
-`TimeUp.active_timers` - Returns an array of all timers that are currently
-running. Useful for detecting cases where you might be counting the same time in
-multiple places simultaneously
+`TimeUp.active_timers` - Returns an Array of all timers that are currently
+running. Useful for detecting cases where you might be keeping time in multiple
+places simultaneously
 
 `TimeUp.print_summary([io])` - Pretty-prints a multi-line summary of all your
 timers to standard output (or the provided
@@ -189,17 +188,14 @@ reference to them
 
 `elapsed` - A `Float` of the total elapsed seconds the timer has been running
 
-`timings` - Returns an array of each recorded start-to-stop duration of the
-timer (including the current one, if active)
+`timings` - Returns an Array of each recorded start-to-stop duration of the
+timer (including the current one, if the timer is running)
 
-`count` - The number of times the timer has been started and stopped (including
-the current timing, if active)
+`count` - The number of times the timer has been started and stopped
 
-`min` - The shortest recording of the timer (including the current one, if
-active)
+`min` - The shortest recording of the timer
 
-`max` - The longest recording of the timer (including the current one, if
-active)
+`max` - The longest recording of the timer
 
 `mean` - The arithmetic mean of all recorded durations of the timer
 
