@@ -120,7 +120,8 @@ TimeUp timers summary
 ## API
 
 This gem defines a bunch of public methods but they're all pretty short and
-straightforward, so I'd encourage you to [read the code](/lib/time_up.rb).
+straightforward, so when in doubt, I'd encourage you to [read the 
+code](/lib/time_up.rb).
 
 ### `TimeUp` module
 
