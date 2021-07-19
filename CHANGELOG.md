@@ -1,3 +1,7 @@
+# 0.0.4
+
+- Add `TimeUp.print_detailed_summary`
+
 # 0.0.3
 
 - Change the return value of TimeUp.start when passed a block to be the
