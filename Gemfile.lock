@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    time_up (0.0.5)
+    time_up (0.0.6)
 
 GEM
   remote: https://rubygems.org/

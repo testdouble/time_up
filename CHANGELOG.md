@@ -1,3 +1,7 @@
+# 0.0.6
+
+- Add `TimeUp.all_timers`. It's weird that it's not a thing.
+
 # 0.0.5
 
 - Add `median` and `percentile` timer statistics, and added them to

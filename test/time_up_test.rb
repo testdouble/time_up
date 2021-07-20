@@ -51,6 +51,13 @@ class TimeUpTest < Minitest::Test
     assert_equal stop_return_1, stop_return_2
   end
 
+  def test_all_timers
+    t1 = TimeUp.start :t1
+    t2 = TimeUp.start :t2
+
+    assert_equal [t1, t2], TimeUp.all_timers
+  end
+
   def test_active_timers
     t1 = TimeUp.start :t1
     t2 = TimeUp.start :t2

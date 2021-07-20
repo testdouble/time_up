@@ -47,6 +47,10 @@ module TimeUp
     }.to_h
   end
 
+  def self.all_timers
+    __timers.values
+  end
+
   def self.all_stats
     __timers.values.map { |timer|
       [timer.name, {
