@@ -1,3 +1,8 @@
+# 0.0.5
+
+- Add `median` and `percentile` timer statistics, and added them to
+  `print_detailed_summary`
+
 # 0.0.4
 
 - Add `TimeUp.print_detailed_summary`
