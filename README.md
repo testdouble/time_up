@@ -125,13 +125,13 @@ statistics in the print-out, you can call `TimeUp.print_detailed_summary`, which
 will produce this:
 
 ```
-=========================================================
-  Name    | Elapsed | Count |   Min   |   Max   |  Mean
----------------------------------------------------------
-:roast    | 0.08641 | 3     | 0.00127 | 0.07261 | 0.02880
-:veggies  | 0.03759 | 1     | 0.03759 | 0.03759 | 0.03759
-:pasta    | 0.01256 | 11    | 0.00000 | 0.01255 | 0.00114
-:souffle* | 0.00006 | 1     | 0.00007 | 0.00007 | 0.00007
+=============================================================================
+  Name    | Elapsed | Count |   Min   |   Max   |  Mean   | Median  | 95th %
+-----------------------------------------------------------------------------
+:roast    | 0.08454 | 3     | 0.00128 | 0.07280 | 0.02818 | 0.01046 | 0.06657
+:veggies  | 0.03779 | 1     | 0.03779 | 0.03779 | 0.03779 | 0.03779 | 0.03779
+:pasta    | 0.01260 | 11    | 0.00000 | 0.01258 | 0.00115 | 0.00000 | 0.00630
+:souffle* | 0.00024 | 1     | 0.00024 | 0.00025 | 0.00025 | 0.00025 | 0.00026
 
 * Denotes that the timer is still active
 ```
@@ -170,6 +170,12 @@ the current timing, if the timer is running)
 `TimeUp.max(name)` - The longest recording by the timer
 
 `TimeUp.mean(name)` - The arithmetic mean of all recordings by the timer
+
+`TimeUp.median(name)` - The median of all recordings by the timer
+
+`TimeUp.percentile(name, percent)` - The timing for the given
+[percentile](https://en.wikipedia.org/wiki/Percentile) of all recordings by the
+timer
 
 `TimeUp.total_elapsed` - Returns a `Float` of the sum of `elapsed` across all
 the timers you've created (note that because you can easily run multiple logical
@@ -221,6 +227,12 @@ timer (including the current one, if the timer is running)
 `max` - The longest recording of the timer
 
 `mean` - The arithmetic mean of all recorded durations of the timer
+
+`median(name)` - The median of all recordings by the timer
+
+`percentile(name, percent)` - The timing for the given
+[percentile](https://en.wikipedia.org/wiki/Percentile) of all recordings by the
+timer
 
 `active?` - Returns `true` if the timer is running
 

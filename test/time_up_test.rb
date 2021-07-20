@@ -1,6 +1,8 @@
 require "test_helper"
 
 class TimeUpTest < Minitest::Test
+  make_my_diffs_pretty!
+
   def teardown
     TimeUp.delete_all
   end
@@ -254,13 +256,13 @@ class TimeUpTest < Minitest::Test
 
     [
       "",
-      "=========================================================",
-      "  Name    | Elapsed | Count |   Min   |   Max   |  Mean  ",
-      "---------------------------------------------------------",
-      /^:roast    \| 0.0[789]\d{3} \| 3     \| 0.00\d{3} \| 0.0[678]\d{3} \| 0.0[123]\d{3}/,
-      /^:veggies  \| 0.0[234]\d{3} \| 1     \| 0.0[234]\d{3} \| 0.0[234]\d{3} \| 0.0[234]\d{3}/,
-      /^:pasta    \| 0.0[012]\d{3} \| 11    \| 0.00000 \| 0.0[012]\d{3} \| 0.00\d{3}/,
-      /^:souffle\* \| 0.00\d{3} \| 1     \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3}/,
+      "=============================================================================",
+      "  Name    | Elapsed | Count |   Min   |   Max   |  Mean   | Median  | 95th % ",
+      "-----------------------------------------------------------------------------",
+      /^:roast    \| 0.0[789]\d{3} \| 3     \| 0.00\d{3} \| 0.0[678]\d{3} \| 0.0[123]\d{3} \| 0.0[123]\d{3} \| 0.0[567]\d{3}/,
+      /^:veggies  \| 0.0[234]\d{3} \| 1     \| 0.0[234]\d{3} \| 0.0[234]\d{3} \| 0.0[234]\d{3} \| 0.0[234]\d{3} \| 0.0[234]\d{3}/,
+      /^:pasta    \| 0.0[012]\d{3} \| 11    \| 0.00000 \| 0.0[012]\d{3} \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3}/,
+      /^:souffle\* \| 0.00\d{3} \| 1     \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3} \| 0.00\d{3}/,
       "",
       "* Denotes that the timer is still active"
     ].each.with_index do |expected, i|
@@ -299,6 +301,10 @@ class TimeUpTest < Minitest::Test
     assert_nil TimeUp.max(:a)
     assert_nil timer.mean
     assert_nil TimeUp.mean(:a)
+    assert_nil timer.median
+    assert_nil TimeUp.median(:a)
+    assert_nil timer.percentile(95)
+    assert_nil TimeUp.percentile(:a, 95)
   end
 
   def test_basic_stats_tracking
@@ -319,6 +325,13 @@ class TimeUpTest < Minitest::Test
     assert_in_delta 0.05, timer.min, 0.01
     assert_in_delta 0.2, timer.max, 0.01
     assert_in_delta 0.1125, timer.mean, 0.03
+    assert_in_delta 0.1, timer.median, 0.02
+    assert_equal 0, timer.percentile(0)
+    assert_equal 0, timer.percentile(-1.0)
+    assert_in_delta 0.2, timer.percentile(100.0), 0.01
+    assert_in_delta 0.2, timer.percentile(110.0), 0.01
+    assert_in_delta 0.2, timer.percentile(95), 0.03
+    assert_in_delta 0.095, timer.percentile(30), 0.03
   end
 
   def test_all_stats
@@ -330,20 +343,25 @@ class TimeUpTest < Minitest::Test
 
     a = TimeUp.timer(:a)
     b = TimeUp.timer(:b)
+
     assert_equal({
       a: {
         elapsed: a.elapsed,
         count: 2,
         min: a.min,
         max: a.max,
-        mean: a.mean
+        mean: a.mean,
+        median: a.median,
+        "95th": a.percentile(95)
       },
       b: {
         elapsed: b.elapsed,
         count: 1,
         min: b.min,
         max: b.max,
-        mean: b.mean
+        mean: b.mean,
+        median: b.median,
+        "95th": b.percentile(95)
       }
     }, result)
   end

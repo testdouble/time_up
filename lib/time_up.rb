@@ -22,12 +22,18 @@ module TimeUp
     :count,
     :min,
     :max,
-    :mean
+    :mean,
+    :median
   ].each do |method_name|
     define_singleton_method method_name do |name|
       __ensure_timer(name)
       __timers[name].send(method_name)
     end
+  end
+
+  def self.percentile(name, percentage)
+    __ensure_timer(name)
+    __timers[name].percentile(percentage)
   end
 
   # Interrogative methods
@@ -48,7 +54,9 @@ module TimeUp
         count: timer.count,
         min: timer.min,
         max: timer.max,
-        mean: timer.mean
+        mean: timer.mean,
+        median: timer.median,
+        "95th": timer.percentile(95)
       }]
     }.to_h
   end
@@ -80,7 +88,9 @@ module TimeUp
       count: ["Count"],
       min: ["Min"],
       max: ["Max"],
-      mean: ["Mean"]
+      mean: ["Mean"],
+      median: ["Median"],
+      "95th": ["95th %"]
     }
     __timers.values.each { |timer|
       cols[:names] << "#{timer.name.inspect}#{"*" if timer.active?}"
@@ -89,6 +99,8 @@ module TimeUp
       cols[:min] << "%.5f" % timer.min
       cols[:max] << "%.5f" % timer.max
       cols[:mean] << "%.5f" % timer.mean
+      cols[:median] << "%.5f" % timer.median
+      cols[:"95th"] << "%.5f" % timer.percentile(95)
     }
 
     widths = cols.map { |name, vals|
@@ -209,6 +221,25 @@ module TimeUp
       times = timings
       return if times.empty?
       times.sum / times.size
+    end
+
+    def median
+      times = timings.sort
+      return if times.empty?
+      (times[(times.size - 1) / 2] + times[times.size / 2]) / 2.0
+    end
+
+    def percentile(percent)
+      times = timings.sort
+      return if times.empty?
+      return 0 if percent <= 0
+      return max if percent >= 100
+      return times.first if times.size == 1
+      position = (percent / 100.0) * (times.size - 1)
+
+      partial_ratio = position - position.floor
+      whole, partial = times[position.floor, 2]
+      whole + (partial - whole) * partial_ratio
     end
 
     def timings
