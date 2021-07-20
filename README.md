@@ -11,6 +11,9 @@ process and that you want to measure in aggregate. (For example, to see how
 much time your test suite spends creating factories, truncating the database, or
 invoking a critical code path.)
 
+Here's a [blog post about time_up](https://blog.testdouble.com/posts/2021-07-19-benchmarking-your-ruby-with-time_up/) and 
+a [great example of when it can be useful](https://gist.github.com/searls/feee0b0eac7c329b390fed90c4714afb).
+
 ## Install
 
 Just run `gem install time_up` or add time_up to your Gemfile:
