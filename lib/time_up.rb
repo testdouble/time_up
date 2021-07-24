@@ -151,7 +151,7 @@ module TimeUp
 
   # Internal methods
   def self.__timers
-    Thread.current[:time_up_timers]
+    Thread.current[:time_up_timers] ||= {}
   end
 
   def self.__ensure_timer(name)
