@@ -1,18 +1,28 @@
 name: Ruby
 
-on: [push,pull_request]
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      matrix:
+        ruby:
+          - '3.2.1'
+
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.0.1
-    - name: Run the default task
-      run: |
-        gem install bundler -v 2.2.15
-        bundle install
-        bundle exec rake
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - name: Run tests
+      run: bundle exec rake
+
