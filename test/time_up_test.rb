@@ -1,8 +1,6 @@
 require "test_helper"
 
-class TimeUpTest < Minitest::Test
-  make_my_diffs_pretty!
-
+class TimeUpTest < TLDR
   def teardown
     TimeUp.delete_all
   end
